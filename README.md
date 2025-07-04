@@ -3,9 +3,9 @@ Thanks for checking out my technical assessment.  It's been a fun challenge gett
 
 I've decided to implement this task in the following way.
 
-Create a Job in Laravel to populate the DB with coin data from Coin Gecko - this API can be accessed from the Nuxt app directly without the need for Laravel but for this task i'm adding this storage step to allow for future transformation of the data and to add a level of authenication.
+Create a Job in Laravel to populate the DB with coin data from Coin Gecko - this API can be accessed from the Nuxt app directly without the need for Laravel but for this task i'm adding this storage step to allow for future transformation of the data.
 
-This will also reduce the amount of calls to the Coin Gecko API and allow more control over a users access and ofor more features in the future, for example, I can imagine a user wanting to save a list of favourite coins and i would implement the user login and profile storage in Laravel
+This will also reduce the amount of calls to the Coin Gecko API and allow more control over a users access and offer more features in the future, for example, I can imagine a user wanting to save a list of favourite coins and i would implement the user login and profile storage in Laravel
 
 ## Local Environment
 I'm developing on my windows laptop using WSL2 to give me a more familiar dev environment and set of tools - i've pretty much only ever used linux or MacOS for development work so there have been some interesting challenges getting the usual stack running under this setup.  I'm using an Ubuntu box and running laravel in Docker via laravel sail.  The nuxt front end is running under it's own local server.  With a bit more time i'd like to have set up docker compose to run nuxt in it's own container so i could spin everything up with one command.
@@ -18,7 +18,7 @@ I'm using Warp terminal which has an OpenAI integration allowing for tight integ
 
 For example, I asked it to create a landing page with the top 10 crypto currencies using dummy data in my nuxt app and it created the basic page for me.
 
-![dummy data](./readme_images/toptem.png)
+![dummy data](fanwave-app/readme_images/toptem.png)
 
 Next i moved to laravel and told the AI to scaffold me a job to poll the Coin Gecko '/coins/markets' endpoint every 10 minutes and to save that data for me.  At this point I had only added my API key to the services.php config file.  
 
@@ -26,9 +26,11 @@ Warp analysed my codebase and created the Job, Models, Migrations, Documentation
 
 Creating all this by hand is very tedious and error prone, by getting Warp terminal to set this up i can focus on getting the work done and not waste time on boilerplate code like this.
 
-![dummy data](./readme_images/aioutput.png)
+![ai output](fanwave-app/readme_images/aioutput.png)
 
 I also used this functionality throughout the build to save time and simplify debugging - I can simply type "the search functionality is hanging" and Warp will debug and suggest fixes for me.  Another good usage was to ask it to replace the initial css styles with tailwind as i somehow missed that requirement when starting the code.
+
+It also generated some documentation for me regarding the API and the scheduled task.  This is in the server repo and provides instructions on how to run the job.
 
 ## How to run
 #### **Real Cryptocurrency Data:**
@@ -51,7 +53,7 @@ I also used this functionality throughout the build to save time and simplify de
 1. **Start the Laravel backend:**
    ```bash
    cd fanwave-app
-   sail up -d
+   ./vendor/bin/sail up -d
    ```
 
 2. **Start the Nuxt frontend:**
@@ -60,7 +62,19 @@ I also used this functionality throughout the build to save time and simplify de
    npm run dev
    ```
 
-3. **Visit the pages:**
+3. **Run the Job:**
+   
+   Make sure your .env file contains
+   ```
+      COIN_GECKO_API_KEY="your-api-key-here"
+      COIN_GECKO_ROOT_URL="https://api.coingecko.com/api/v3/"
+      ```
+   ```bash
+   cd fanwave-app
+   ./vendor/bin/sail artisan crypto:fetch --sync
+   ```
+
+4. **Visit the pages:**
    - Landing page: `http://localhost:3000/`
    - Crypto data: `http://localhost:3000/crypto`
 
