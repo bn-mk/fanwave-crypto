@@ -27,8 +27,10 @@
         <div 
           v-for="crypto in cryptoData" 
           :key="crypto.id"
-          class="crypto-card"
+          class="crypto-card-link"
+          @click="handleCardClick(crypto.id)"
         >
+          <div class="crypto-card">
           <div class="crypto-header">
             <div class="crypto-info">
               <div class="crypto-icon">
@@ -73,6 +75,7 @@
               <span class="stat-label">Volume (24h)</span>
               <span class="stat-value">{{ formatVolume(crypto.total_volume) }}</span>
             </div>
+          </div>
           </div>
         </div>
       </div>
@@ -182,6 +185,18 @@ const handleImageError = (event: Event) => {
   // The v-else will show the fallback symbol
 }
 
+const handleCardClick = (cryptoId: string) => {
+  console.log('Card clicked for crypto:', cryptoId)
+  console.log('Navigating to:', `/crypto/${cryptoId}`)
+  
+  // Try programmatic navigation as fallback
+  try {
+    navigateTo(`/crypto/${cryptoId}`)
+  } catch (error) {
+    console.error('Navigation error:', error)
+  }
+}
+
 // Fetch data when component mounts
 onMounted(() => {
   fetchData()
@@ -241,6 +256,14 @@ onMounted(() => {
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 1.5rem;
   margin-top: 2rem;
+}
+
+.crypto-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .crypto-card {
