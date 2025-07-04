@@ -38,7 +38,9 @@ export const useCrypto = () => {
   // Get top cryptocurrencies by market cap
   const getTopCryptocurrencies = async (limit: number = 10): Promise<CryptoCurrency[]> => {
     try {
-      const response = await $fetch<ApiResponse<CryptoCurrency[]>>(`${config.public.apiBase}/crypto/top?limit=${limit}`)
+      const response = await $fetch<ApiResponse<CryptoCurrency[]>>(`${config.public.apiBase}/crypto/top?limit=${limit}`, {
+        timeout: 10000 // 10 second timeout
+      })
       
       return response.data
     } catch (error: any) {
@@ -50,12 +52,24 @@ export const useCrypto = () => {
   // Get specific cryptocurrency by ID
   const getCryptocurrency = async (coinId: string): Promise<CryptoCurrency> => {
     try {
-      const { data } = await $fetch<ApiResponse<CryptoCurrency>>(`${config.public.apiBase}/crypto/${coinId}`)
+      const url = `${config.public.apiBase}/crypto/${coinId}`
+      console.log('Making API call to:', url)
       
-      return data
+      const response = await $fetch<ApiResponse<CryptoCurrency>>(url, {
+        timeout: 10000 // 10 second timeout
+      })
+      console.log('API response:', response)
+      
+      return response.data
     } catch (error: any) {
       console.error(`Failed to fetch cryptocurrency ${coinId}:`, error)
-      throw new Error(error.data?.message || 'Failed to fetch cryptocurrency data')
+      console.error('Error details:', {
+        status: error.status,
+        statusText: error.statusText,
+        data: error.data,
+        message: error.message
+      })
+      throw new Error(error.data?.message || error.message || 'Failed to fetch cryptocurrency data')
     }
   }
   
