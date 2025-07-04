@@ -5,9 +5,25 @@
         <NuxtLink to="/" class="back-btn">← Back to Home</NuxtLink>
         <h1 class="page-title">Top 10 Cryptocurrencies</h1>
         <p class="page-subtitle">Track the biggest digital currencies by market cap</p>
+        <div v-if="lastUpdated" class="last-updated">
+          Last updated: {{ formatDate(lastUpdated) }}
+        </div>
       </header>
 
-      <div class="crypto-grid">
+      <!-- Loading State -->
+      <div v-if="pending" class="loading-container">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Loading cryptocurrency data...</p>
+      </div>
+
+      <!-- Error State -->
+      <div v-else-if="error" class="error-container">
+        <p class="error-message">{{ error }}</p>
+        <button @click="refresh()" class="retry-button">Try Again</button>
+      </div>
+
+      <!-- Success State -->
+      <div v-else-if="cryptoData" class="crypto-grid fade-in">
         <div 
           v-for="crypto in cryptoData" 
           :key="crypto.id"
@@ -15,150 +31,161 @@
         >
           <div class="crypto-header">
             <div class="crypto-info">
-              <div class="crypto-icon">{{ crypto.symbol }}</div>
+              <div class="crypto-icon">
+                <img 
+                  v-if="crypto.image" 
+                  :src="crypto.image" 
+                  :alt="crypto.name"
+                  class="crypto-image"
+                  @error="handleImageError"
+                />
+                <span v-else class="crypto-symbol-fallback">{{ crypto.symbol }}</span>
+              </div>
               <div class="crypto-details">
                 <h3 class="crypto-name">{{ crypto.name }}</h3>
                 <span class="crypto-symbol">{{ crypto.symbol }}</span>
               </div>
             </div>
-            <div class="crypto-rank">#{{ crypto.rank }}</div>
+            <div class="crypto-rank">#{{ crypto.market_cap_rank }}</div>
           </div>
           
           <div class="crypto-stats">
             <div class="stat-item">
               <span class="stat-label">Price</span>
-              <span class="stat-value price">${{ crypto.price }}</span>
+              <span class="stat-value price">{{ crypto.formatted_price }}</span>
             </div>
             
             <div class="stat-item">
               <span class="stat-label">24h Change</span>
               <span 
-                :class="['stat-value', 'change', crypto.change24h >= 0 ? 'positive' : 'negative']"
+                :class="['stat-value', 'change', crypto.price_change_percentage_24h >= 0 ? 'positive' : 'negative']"
               >
-                {{ crypto.change24h >= 0 ? '+' : '' }}{{ crypto.change24h }}%
+                {{ formatPercentage(crypto.price_change_percentage_24h) }}%
               </span>
             </div>
             
             <div class="stat-item">
               <span class="stat-label">Market Cap</span>
-              <span class="stat-value">${{ crypto.marketCap }}</span>
+              <span class="stat-value">{{ crypto.formatted_market_cap }}</span>
             </div>
             
             <div class="stat-item">
               <span class="stat-label">Volume (24h)</span>
-              <span class="stat-value">${{ crypto.volume24h }}</span>
+              <span class="stat-value">{{ formatVolume(crypto.total_volume) }}</span>
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Empty State -->
+      <div v-else class="error-container">
+        <p class="error-message">No cryptocurrency data available</p>
+        <button @click="refresh()" class="retry-button">Reload</button>
       </div>
     </div>
   </div>
 </template>
 
-<script setup>
-// Dummy data for top 10 cryptocurrencies
-const cryptoData = [
-  {
-    id: 1,
-    name: 'Bitcoin',
-    symbol: 'BTC',
-    rank: 1,
-    price: '43,250.00',
-    change24h: 2.45,
-    marketCap: '847.2B',
-    volume24h: '25.3B'
-  },
-  {
-    id: 2,
-    name: 'Ethereum',
-    symbol: 'ETH',
-    rank: 2,
-    price: '2,650.00',
-    change24h: -1.23,
-    marketCap: '318.7B',
-    volume24h: '12.8B'
-  },
-  {
-    id: 3,
-    name: 'Tether',
-    symbol: 'USDT',
-    rank: 3,
-    price: '1.00',
-    change24h: 0.01,
-    marketCap: '95.4B',
-    volume24h: '42.1B'
-  },
-  {
-    id: 4,
-    name: 'BNB',
-    symbol: 'BNB',
-    rank: 4,
-    price: '315.20',
-    change24h: 3.67,
-    marketCap: '47.2B',
-    volume24h: '1.8B'
-  },
-  {
-    id: 5,
-    name: 'Solana',
-    symbol: 'SOL',
-    rank: 5,
-    price: '98.45',
-    change24h: -2.18,
-    marketCap: '42.8B',
-    volume24h: '2.1B'
-  },
-  {
-    id: 6,
-    name: 'XRP',
-    symbol: 'XRP',
-    rank: 6,
-    price: '0.6180',
-    change24h: 4.32,
-    marketCap: '33.5B',
-    volume24h: '1.4B'
-  },
-  {
-    id: 7,
-    name: 'USDC',
-    symbol: 'USDC',
-    rank: 7,
-    price: '1.00',
-    change24h: -0.02,
-    marketCap: '32.1B',
-    volume24h: '5.8B'
-  },
-  {
-    id: 8,
-    name: 'Cardano',
-    symbol: 'ADA',
-    rank: 8,
-    price: '0.4890',
-    change24h: 1.89,
-    marketCap: '17.2B',
-    volume24h: '654M'
-  },
-  {
-    id: 9,
-    name: 'Dogecoin',
-    symbol: 'DOGE',
-    rank: 9,
-    price: '0.0823',
-    change24h: -0.45,
-    marketCap: '11.8B',
-    volume24h: '892M'
-  },
-  {
-    id: 10,
-    name: 'Avalanche',
-    symbol: 'AVAX',
-    rank: 10,
-    price: '24.67',
-    change24h: 5.12,
-    marketCap: '9.7B',
-    volume24h: '312M'
+<script setup lang="ts">
+// Use the crypto composable
+const { getTopCryptocurrencies } = useCrypto()
+
+// Define the interface locally
+interface CryptoCurrency {
+  id: string
+  symbol: string
+  name: string
+  image: string
+  current_price: number
+  market_cap: number
+  market_cap_rank: number
+  price_change_24h: number
+  price_change_percentage_24h: number
+  total_volume: number
+  circulating_supply: number
+  formatted_price: string
+  formatted_market_cap: string
+  last_updated: string
+}
+
+// Reactive state
+const cryptoData = ref<CryptoCurrency[]>([])
+const pending = ref(true)
+const error = ref<string | null>(null)
+const lastUpdated = ref<string | null>(null)
+
+// Fetch cryptocurrency data
+const fetchData = async () => {
+  try {
+    pending.value = true
+    error.value = null
+    
+    const data = await getTopCryptocurrencies(10)
+    cryptoData.value = data
+    
+    // Set last updated from the first item (they should all have similar timestamps)
+    if (data.length > 0) {
+      lastUpdated.value = data[0].last_updated
+    }
+  } catch (err: any) {
+    error.value = err.message || 'Failed to load cryptocurrency data'
+    console.error('Error fetching crypto data:', err)
+  } finally {
+    pending.value = false
   }
-]
+}
+
+// Refresh function for retry button
+const refresh = () => {
+  fetchData()
+}
+
+// Helper functions for formatting
+const formatPercentage = (value: number): string => {
+  if (value === null || value === undefined) return '0.00'
+  const sign = value >= 0 ? '+' : ''
+  return `${sign}${value.toFixed(2)}`
+}
+
+const formatVolume = (value: number): string => {
+  if (!value) return 'N/A'
+  
+  if (value >= 1e12) {
+    return '$' + (value / 1e12).toFixed(2) + 'T'
+  } else if (value >= 1e9) {
+    return '$' + (value / 1e9).toFixed(2) + 'B'
+  } else if (value >= 1e6) {
+    return '$' + (value / 1e6).toFixed(2) + 'M'
+  }
+  
+  return '$' + value.toLocaleString()
+}
+
+const formatDate = (dateString: string): string => {
+  try {
+    const date = new Date(dateString)
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  } catch {
+    return 'Unknown'
+  }
+}
+
+const handleImageError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  img.style.display = 'none'
+  // The v-else will show the fallback symbol
+}
+
+// Fetch data when component mounts
+onMounted(() => {
+  fetchData()
+})
 </script>
 
 <style scoped>
@@ -254,6 +281,26 @@ const cryptoData = [
   color: white;
   font-weight: 700;
   font-size: 0.875rem;
+  overflow: hidden;
+}
+
+.crypto-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.crypto-symbol-fallback {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.last-updated {
+  font-size: 0.875rem;
+  color: #718096;
+  margin-top: 0.5rem;
+  font-style: italic;
 }
 
 .crypto-details {

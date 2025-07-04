@@ -29,3 +29,79 @@ Creating all this by hand is very tedious and error prone, by getting Warp termi
 ![dummy data](./readme_images/aioutput.png)
 
 ## Search
+
+## How to run
+#### **Real Cryptocurrency Data:**
+- ✅ **Live prices** from CoinGecko
+- ✅ **Real logos** with fallback symbols
+- ✅ **Market cap rankings**
+- ✅ **24h price changes** (green/red)
+- ✅ **Trading volumes**
+- ✅ **Last updated timestamps**
+
+#### **User Experience:**
+- ✅ **Loading spinner** during data fetch
+- ✅ **Error messages** with retry buttons
+- ✅ **Responsive grid** layout
+- ✅ **Smooth animations** and transitions
+- ✅ **Mobile-friendly** design
+
+### 📱 How to Test:
+
+1. **Start the Laravel backend:**
+   ```bash
+   cd fanwave-app
+   sail up -d
+   ```
+
+2. **Start the Nuxt frontend:**
+   ```bash
+   cd fanwave-app-frontend
+   npm run dev
+   ```
+
+3. **Visit the pages:**
+   - Landing page: `http://localhost:3000/`
+   - Crypto data: `http://localhost:3000/crypto`
+
+### 🔧 Technical Stack:
+
+#### **Frontend:**
+- **Nuxt 3** with TypeScript
+- **Vue 3** Composition API
+- **Reactive data** with ref()
+- **Composables** for API calls
+- **CSS Grid** for responsive layout
+
+#### **Backend:**
+- **Laravel 11** with Sail
+- **RESTful API** endpoints
+- **MySQL database** with real CoinGecko data
+- **Scheduled jobs** (every 10 minutes)
+- **Error handling** and logging
+
+### 🎯 What You Can Do Now:
+
+#### **View Real Data:**
+- See actual Bitcoin, Ethereum, and other crypto prices
+- Real market cap rankings from CoinGecko
+- Live 24-hour price changes
+- Current trading volumes
+
+#### **Test Features:**
+- Refresh functionality
+- Error recovery
+- Mobile responsiveness
+- Loading states
+
+#### **API Testing:**
+```bash
+# Test the API directly
+curl "http://localhost/api/crypto/top?limit=5"
+
+# Test individual crypto
+curl "http://localhost/api/crypto/bitcoin"
+
+# Test search
+curl "http://localhost/api/cryptocurrencies/search?query=eth"
+```
