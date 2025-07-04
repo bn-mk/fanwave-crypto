@@ -34,9 +34,10 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-        'coin_gecko' => [
-        'key' => env('COIN_GECKO_API_KEY'),
-        'root_url' => env('COIN_GECKO_ROOT_URL'),
-    ]
+
+    'coingecko' => [
+        'api_key' => env('COIN_GECKO_API_KEY'),
+        'root_url' => env('COIN_GECKO_ROOT_URL', 'https://api.coingecko.com/api/v3'),
+    ],
 
 ];
