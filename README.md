@@ -32,6 +32,8 @@ I also used this functionality throughout the build to save time and simplify de
 
 It also generated some documentation for me regarding the API and the scheduled task.  This is in the server repo and provides instructions on how to run the job.
 
+Finally I got Warp to write me a comprehensive batch of feature and unit tests - normally i would choose what tests to create by hand but due to time constraints i generated them this way.
+
 ## How to run
 #### **Real Cryptocurrency Data:**
 - ✅ **Live prices** from CoinGecko
@@ -55,10 +57,19 @@ It also generated some documentation for me regarding the API and the scheduled 
    cd fanwave-app
    ./vendor/bin/sail up -d
    ```
+   ```bash
+   ./vendor/bin/sail artisan migrate
+   ```
+   if you encounter any errors here you may need to also run
+   ```bash
+   ./vendor/bin/sail composer install
+   ./vendor/bin/sail composer run dev
+   ```
 
 2. **Start the Nuxt frontend:**
    ```bash
    cd fanwave-app-frontend
+   npm install
    npm run dev
    ```
 
@@ -73,10 +84,21 @@ It also generated some documentation for me regarding the API and the scheduled 
    cd fanwave-app
    ./vendor/bin/sail artisan crypto:fetch --sync
    ```
+   or
+   ```bash
+   cd fanwave-app
+   ./vendor/bin/sail artisan queue:work
+   ```
 
 4. **Visit the pages:**
    - Landing page: `http://localhost:3000/`
    - Crypto data: `http://localhost:3000/crypto`
+
+5. **Run tests:**
+   ```bash
+   cd fanwave-app
+   ./vendor/bin/sail artisan test
+   ```
 
 ### 🔧 Technical Stack:
 
