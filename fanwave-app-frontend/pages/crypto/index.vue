@@ -3,29 +3,58 @@
     <div class="container">
       <header class="page-header">
         <NuxtLink to="/" class="back-btn">← Back to Home</NuxtLink>
-        <h1 class="page-title">Top 10 Cryptocurrencies</h1>
-        <p class="page-subtitle">Track the biggest digital currencies by market cap</p>
-        <div v-if="lastUpdated" class="last-updated">
+        <h1 class="page-title">{{ isSearching ? 'Search Results' : 'Top 10 Cryptocurrencies' }}</h1>
+        <p class="page-subtitle">{{ isSearching ? `Search results for "${searchQuery}"` : 'Track the biggest digital currencies by market cap' }}</p>
+        
+        <!-- Search Bar -->
+        <div class="search-container">
+          <div class="search-box">
+            <input 
+              v-model="searchQuery"
+              type="text" 
+              placeholder="Search cryptocurrencies by name or symbol..."
+              class="search-input"
+              @input="handleSearchInput"
+              @keyup.enter="performSearch"
+            />
+            <button 
+              @click="() => { console.log('Search button clicked'); performSearch(); }" 
+              class="search-button"
+              :disabled="!searchQuery.trim()"
+            >
+              🔍
+            </button>
+            <button 
+              v-if="isSearching"
+              @click="clearSearch" 
+              class="clear-button"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+        
+        <div v-if="lastUpdated && !isSearching" class="last-updated">
           Last updated: {{ formatDate(lastUpdated) }}
         </div>
       </header>
 
       <!-- Loading State -->
-      <div v-if="pending" class="loading-container">
+      <div v-if="(pending && !isSearching) || (searchPending && isSearching)" class="loading-container">
         <div class="loading-spinner"></div>
-        <p class="loading-text">Loading cryptocurrency data...</p>
+        <p class="loading-text">{{ isSearching ? 'Searching cryptocurrencies...' : 'Loading cryptocurrency data...' }}</p>
       </div>
 
       <!-- Error State -->
-      <div v-else-if="error" class="error-container">
-        <p class="error-message">{{ error }}</p>
+      <div v-else-if="(error && !isSearching) || (searchError && isSearching)" class="error-container">
+        <p class="error-message">{{ isSearching ? searchError : error }}</p>
         <button @click="refresh()" class="retry-button">Try Again</button>
       </div>
 
-      <!-- Success State -->
-      <div v-else-if="cryptoData" class="crypto-grid fade-in">
+      <!-- Success State - Search Results or Top 10 -->
+      <div v-else-if="(cryptoData && !isSearching) || (searchResults && isSearching)" class="crypto-grid fade-in">
         <div 
-          v-for="crypto in cryptoData" 
+          v-for="crypto in (isSearching ? searchResults : cryptoData)" 
           :key="crypto.id"
           class="crypto-card-link"
           @click="handleCardClick(crypto.id)"
@@ -82,8 +111,9 @@
 
       <!-- Empty State -->
       <div v-else class="error-container">
-        <p class="error-message">No cryptocurrency data available</p>
-        <button @click="refresh()" class="retry-button">Reload</button>
+        <p class="error-message">{{ isSearching ? `No cryptocurrencies found for "${searchQuery}"` : 'No cryptocurrency data available' }}</p>
+        <button @click="refresh()" class="retry-button">{{ isSearching ? 'Search Again' : 'Reload' }}</button>
+        <button v-if="isSearching" @click="clearSearch()" class="clear-search-button">Show Top 10</button>
       </div>
     </div>
   </div>
@@ -117,6 +147,14 @@ const pending = ref(true)
 const error = ref<string | null>(null)
 const lastUpdated = ref<string | null>(null)
 
+// Search state
+const searchQuery = ref('')
+const isSearching = ref(false)
+const searchResults = ref<CryptoCurrency[]>([])
+const searchPending = ref(false)
+const searchError = ref<string | null>(null)
+let searchTimeout: NodeJS.Timeout | null = null
+
 // Fetch cryptocurrency data
 const fetchData = async () => {
   try {
@@ -140,7 +178,105 @@ const fetchData = async () => {
 
 // Refresh function for retry button
 const refresh = () => {
-  fetchData()
+  if (isSearching.value) {
+    performSearch()
+  } else {
+    fetchData()
+  }
+}
+
+// Search functions
+const performSearch = async () => {
+  if (!searchQuery.value.trim()) return
+  
+  try {
+    console.log('Starting search for:', searchQuery.value)
+    searchPending.value = true
+    searchError.value = null
+    isSearching.value = true
+    
+    const url = `/api/crypto/search?query=${encodeURIComponent(searchQuery.value)}&limit=20`
+    console.log('Search URL:', url)
+    
+    const response = await $fetch(url, {
+      timeout: 10000 // 10 second timeout
+    })
+    
+    console.log('Search response:', response)
+    
+    // Handle the response data structure
+    if (response.success && response.data) {
+      // Map search results to match the expected format  
+      const results = response.data.map((crypto: any) => {
+        const price = parseFloat(crypto.current_price) || 0
+        return {
+          id: crypto.coin_id || crypto.id,
+          symbol: crypto.symbol,
+          name: crypto.name,
+          image: crypto.image,
+          current_price: price,
+          market_cap: crypto.market_cap || 0,
+          market_cap_rank: crypto.market_cap_rank || 0,
+          price_change_24h: crypto.price_change_24h || 0,
+          price_change_percentage_24h: parseFloat(crypto.price_change_percentage_24h) || 0,
+          total_volume: crypto.total_volume || 0,
+          circulating_supply: crypto.circulating_supply || 0,
+          formatted_price: `$${price.toFixed(2)}`,
+          formatted_market_cap: formatMarketCap(crypto.market_cap || 0),
+          last_updated: crypto.last_updated || new Date().toISOString()
+        }
+      })
+      searchResults.value = results
+      console.log('Search results mapped:', results.length, 'items')
+    } else {
+      searchResults.value = []
+      console.log('No search results found')
+    }
+  } catch (err: any) {
+    searchError.value = err.data?.message || err.message || 'Failed to search cryptocurrencies'
+    console.error('Error searching cryptocurrencies:', err)
+    console.error('Full error details:', {
+      status: err.status,
+      statusText: err.statusText,
+      data: err.data,
+      message: err.message
+    })
+  } finally {
+    searchPending.value = false
+    console.log('Search completed, pending:', searchPending.value)
+  }
+}
+
+const handleSearchInput = () => {
+  console.log('Search input changed:', searchQuery.value)
+  
+  // Clear previous timeout
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+  }
+  
+  // If search query is empty, clear search
+  if (!searchQuery.value.trim()) {
+    console.log('Search query empty, clearing search')
+    clearSearch()
+    return
+  }
+  
+  // Temporarily disable debouncing for debugging
+  console.log('Performing immediate search for:', searchQuery.value)
+  performSearch()
+}
+
+const clearSearch = () => {
+  searchQuery.value = ''
+  isSearching.value = false
+  searchResults.value = []
+  searchError.value = null
+  
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+    searchTimeout = null
+  }
 }
 
 // Helper functions for formatting
@@ -151,6 +287,20 @@ const formatPercentage = (value: number): string => {
 }
 
 const formatVolume = (value: number): string => {
+  if (!value) return 'N/A'
+  
+  if (value >= 1e12) {
+    return '$' + (value / 1e12).toFixed(2) + 'T'
+  } else if (value >= 1e9) {
+    return '$' + (value / 1e9).toFixed(2) + 'B'
+  } else if (value >= 1e6) {
+    return '$' + (value / 1e6).toFixed(2) + 'M'
+  }
+  
+  return '$' + value.toLocaleString()
+}
+
+const formatMarketCap = (value: number): string => {
   if (!value) return 'N/A'
   
   if (value >= 1e12) {
@@ -248,7 +398,109 @@ onMounted(() => {
 .page-subtitle {
   font-size: 1.125rem;
   color: #718096;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
+}
+
+.search-container {
+  margin: 2rem 0;
+  display: flex;
+  justify-content: center;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 50px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 0.5rem;
+  max-width: 600px;
+  width: 100%;
+  border: 2px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.search-box:focus-within {
+  border-color: #667eea;
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border-radius: 50px;
+  background: transparent;
+}
+
+.search-input::placeholder {
+  color: #a0aec0;
+}
+
+.search-button {
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-left: 0.5rem;
+}
+
+.search-button:hover:not(:disabled) {
+  background: #5a67d8;
+  transform: scale(1.05);
+}
+
+.search-button:disabled {
+  background: #cbd5e0;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.clear-button {
+  background: #e53e3e;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-left: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.clear-button:hover {
+  background: #c53030;
+  transform: scale(1.05);
+}
+
+.clear-search-button {
+  padding: 0.5rem 1rem;
+  background: #38a169;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  margin-left: 1rem;
+}
+
+.clear-search-button:hover {
+  background: #2f855a;
+  transform: translateY(-2px);
 }
 
 .crypto-grid {
@@ -400,6 +652,24 @@ onMounted(() => {
     font-size: 2rem;
   }
   
+  .search-container {
+    margin: 1.5rem 0;
+  }
+  
+  .search-box {
+    padding: 0.25rem;
+  }
+  
+  .search-input {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+  
+  .search-button, .clear-button {
+    width: 35px;
+    height: 35px;
+  }
+  
   .crypto-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -418,6 +688,21 @@ onMounted(() => {
 @media (max-width: 480px) {
   .page-title {
     font-size: 1.75rem;
+  }
+  
+  .search-container {
+    margin: 1rem 0;
+  }
+  
+  .search-input {
+    font-size: 0.8rem;
+    padding: 0.5rem;
+  }
+  
+  .search-button, .clear-button {
+    width: 32px;
+    height: 32px;
+    font-size: 0.75rem;
   }
   
   .crypto-header {
