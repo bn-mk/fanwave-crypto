@@ -1,25 +1,31 @@
 <template>
-  <div class="crypto-page">
-    <div class="container">
-      <header class="page-header">
-        <NuxtLink to="/" class="back-btn">← Back to Home</NuxtLink>
-        <h1 class="page-title">{{ isSearching ? 'Search Results' : 'Top 10 Cryptocurrencies' }}</h1>
-        <p class="page-subtitle">{{ isSearching ? `Search results for "${searchQuery}"` : 'Track the biggest digital currencies by market cap' }}</p>
+  <div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header class="text-center mb-12">
+        <NuxtLink to="/" class="inline-block mb-4 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-full transition-all duration-300 hover:-translate-y-1 font-medium no-underline">
+          ← Back to Home
+        </NuxtLink>
+        <h1 class="text-3xl md:text-5xl font-bold text-gray-800 mb-2">
+          {{ isSearching ? 'Search Results' : 'Top 10 Cryptocurrencies' }}
+        </h1>
+        <p class="text-lg md:text-xl text-gray-600 mb-4">
+          {{ isSearching ? `Search results for "${searchQuery}"` : 'Track the biggest digital currencies by market cap' }}
+        </p>
         
         <!-- Search Bar -->
-        <div class="search-container">
-          <div class="search-box">
+        <div class="my-8 flex justify-center">
+          <div class="flex items-center bg-white rounded-full shadow-lg border-2 border-gray-200 focus-within:border-primary-500 focus-within:shadow-xl transition-all duration-300 p-2 max-w-2xl w-full">
             <input 
               v-model="searchQuery"
               type="text" 
               placeholder="Search cryptocurrencies by name or symbol..."
-              class="search-input"
+              class="flex-1 border-none outline-none px-4 py-3 text-base rounded-full bg-transparent placeholder-gray-400"
               @input="handleSearchInput"
               @keyup.enter="performSearch"
             />
             <button 
               @click="() => { console.log('Search button clicked'); performSearch(); }" 
-              class="search-button"
+              class="bg-primary-500 hover:bg-primary-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-full w-10 h-10 flex items-center justify-center transition-all duration-300 hover:scale-105 ml-2"
               :disabled="!searchQuery.trim()"
             >
               🔍
@@ -27,14 +33,14 @@
             <button 
               v-if="isSearching"
               @click="clearSearch" 
-              class="clear-button"
+              class="bg-red-500 hover:bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center transition-all duration-300 hover:scale-105 ml-2 text-sm"
             >
               ✕
             </button>
           </div>
         </div>
         
-        <div v-if="lastUpdated && !isSearching" class="last-updated">
+        <div v-if="lastUpdated && !isSearching" class="text-sm text-gray-500 italic mt-2">
           Last updated: {{ formatDate(lastUpdated) }}
         </div>
       </header>
@@ -52,59 +58,62 @@
       </div>
 
       <!-- Success State - Search Results or Top 10 -->
-      <div v-else-if="(cryptoData && !isSearching) || (searchResults && isSearching)" class="crypto-grid fade-in">
+      <div v-else-if="(cryptoData && !isSearching) || (searchResults && isSearching)" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-8 fade-in">
         <div 
           v-for="crypto in (isSearching ? searchResults : cryptoData)" 
           :key="crypto.id"
-          class="crypto-card-link"
+          class="bg-white rounded-xl p-6 shadow-lg border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
           @click="handleCardClick(crypto.id)"
         >
-          <div class="crypto-card">
-          <div class="crypto-header">
-            <div class="crypto-info">
-              <div class="crypto-icon">
+          <div class="flex justify-between items-center mb-6">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center overflow-hidden">
                 <img 
                   v-if="crypto.image" 
                   :src="crypto.image" 
                   :alt="crypto.name"
-                  class="crypto-image"
+                  class="w-full h-full object-cover rounded-full"
                   @error="handleImageError"
                 />
-                <span v-else class="crypto-symbol-fallback">{{ crypto.symbol }}</span>
+                <span v-else class="text-white font-bold text-xs">{{ crypto.symbol }}</span>
               </div>
-              <div class="crypto-details">
-                <h3 class="crypto-name">{{ crypto.name }}</h3>
-                <span class="crypto-symbol">{{ crypto.symbol }}</span>
+              <div>
+                <h3 class="text-xl font-semibold text-gray-800 group-hover:text-primary-600 transition-colors">{{ crypto.name }}</h3>
+                <span class="text-sm text-gray-500 font-medium">{{ crypto.symbol }}</span>
               </div>
             </div>
-            <div class="crypto-rank">#{{ crypto.market_cap_rank }}</div>
+            <div class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm font-semibold">
+              #{{ crypto.market_cap_rank }}
+            </div>
           </div>
           
-          <div class="crypto-stats">
-            <div class="stat-item">
-              <span class="stat-label">Price</span>
-              <span class="stat-value price">{{ crypto.formatted_price }}</span>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1">
+              <span class="text-sm text-gray-500 font-medium">Price</span>
+              <span class="text-lg font-semibold text-primary-600">{{ crypto.formatted_price }}</span>
             </div>
             
-            <div class="stat-item">
-              <span class="stat-label">24h Change</span>
+            <div class="flex flex-col gap-1">
+              <span class="text-sm text-gray-500 font-medium">24h Change</span>
               <span 
-                :class="['stat-value', 'change', crypto.price_change_percentage_24h >= 0 ? 'positive' : 'negative']"
+                :class="[
+                  'text-lg font-semibold',
+                  crypto.price_change_percentage_24h >= 0 ? 'text-success-500' : 'text-danger-500'
+                ]"
               >
                 {{ formatPercentage(crypto.price_change_percentage_24h) }}%
               </span>
             </div>
             
-            <div class="stat-item">
-              <span class="stat-label">Market Cap</span>
-              <span class="stat-value">{{ crypto.formatted_market_cap }}</span>
+            <div class="flex flex-col gap-1">
+              <span class="text-sm text-gray-500 font-medium">Market Cap</span>
+              <span class="text-base font-semibold text-gray-800">{{ crypto.formatted_market_cap }}</span>
             </div>
             
-            <div class="stat-item">
-              <span class="stat-label">Volume (24h)</span>
-              <span class="stat-value">{{ formatVolume(crypto.total_volume) }}</span>
+            <div class="flex flex-col gap-1">
+              <span class="text-sm text-gray-500 font-medium">Volume (24h)</span>
+              <span class="text-base font-semibold text-gray-800">{{ formatVolume(crypto.total_volume) }}</span>
             </div>
-          </div>
           </div>
         </div>
       </div>
@@ -113,7 +122,7 @@
       <div v-else class="error-container">
         <p class="error-message">{{ isSearching ? `No cryptocurrencies found for "${searchQuery}"` : 'No cryptocurrency data available' }}</p>
         <button @click="refresh()" class="retry-button">{{ isSearching ? 'Search Again' : 'Reload' }}</button>
-        <button v-if="isSearching" @click="clearSearch()" class="clear-search-button">Show Top 10</button>
+        <button v-if="isSearching" @click="clearSearch()" class="px-4 py-2 bg-success-500 hover:bg-success-600 text-white rounded-lg font-medium transition-all duration-300 hover:-translate-y-0.5 ml-4">Show Top 10</button>
       </div>
     </div>
   </div>
@@ -352,368 +361,3 @@ onMounted(() => {
   fetchData()
 })
 </script>
-
-<style scoped>
-.crypto-page {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  padding: 2rem 0;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 2rem;
-}
-
-.page-header {
-  text-align: center;
-  margin-bottom: 3rem;
-}
-
-.back-btn {
-  display: inline-block;
-  margin-bottom: 1rem;
-  padding: 0.5rem 1rem;
-  background-color: #667eea;
-  color: white;
-  text-decoration: none;
-  border-radius: 25px;
-  transition: all 0.3s ease;
-  font-weight: 500;
-}
-
-.back-btn:hover {
-  background-color: #5a67d8;
-  transform: translateY(-2px);
-}
-
-.page-title {
-  font-size: 3rem;
-  font-weight: 700;
-  color: #2d3748;
-  margin-bottom: 0.5rem;
-}
-
-.page-subtitle {
-  font-size: 1.125rem;
-  color: #718096;
-  margin-bottom: 1rem;
-}
-
-.search-container {
-  margin: 2rem 0;
-  display: flex;
-  justify-content: center;
-}
-
-.search-box {
-  display: flex;
-  align-items: center;
-  background: white;
-  border-radius: 50px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  padding: 0.5rem;
-  max-width: 600px;
-  width: 100%;
-  border: 2px solid #e2e8f0;
-  transition: all 0.3s ease;
-}
-
-.search-box:focus-within {
-  border-color: #667eea;
-  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
-}
-
-.search-input {
-  flex: 1;
-  border: none;
-  outline: none;
-  padding: 0.75rem 1rem;
-  font-size: 1rem;
-  border-radius: 50px;
-  background: transparent;
-}
-
-.search-input::placeholder {
-  color: #a0aec0;
-}
-
-.search-button {
-  background: #667eea;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-left: 0.5rem;
-}
-
-.search-button:hover:not(:disabled) {
-  background: #5a67d8;
-  transform: scale(1.05);
-}
-
-.search-button:disabled {
-  background: #cbd5e0;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.clear-button {
-  background: #e53e3e;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-left: 0.5rem;
-  font-size: 0.875rem;
-}
-
-.clear-button:hover {
-  background: #c53030;
-  transform: scale(1.05);
-}
-
-.clear-search-button {
-  padding: 0.5rem 1rem;
-  background: #38a169;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  margin-left: 1rem;
-}
-
-.clear-search-button:hover {
-  background: #2f855a;
-  transform: translateY(-2px);
-}
-
-.crypto-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 1.5rem;
-  margin-top: 2rem;
-}
-
-.crypto-card-link {
-  text-decoration: none;
-  color: inherit;
-  display: block;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.crypto-card {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  border: 1px solid #e2e8f0;
-}
-
-.crypto-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-}
-
-.crypto-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.crypto-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.crypto-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 700;
-  font-size: 0.875rem;
-  overflow: hidden;
-}
-
-.crypto-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
-
-.crypto-symbol-fallback {
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-
-.last-updated {
-  font-size: 0.875rem;
-  color: #718096;
-  margin-top: 0.5rem;
-  font-style: italic;
-}
-
-.crypto-details {
-  display: flex;
-  flex-direction: column;
-}
-
-.crypto-name {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #2d3748;
-  margin: 0;
-}
-
-.crypto-symbol {
-  font-size: 0.875rem;
-  color: #718096;
-  font-weight: 500;
-}
-
-.crypto-rank {
-  background-color: #edf2f7;
-  color: #4a5568;
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-weight: 600;
-  font-size: 0.875rem;
-}
-
-.crypto-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.stat-label {
-  font-size: 0.875rem;
-  color: #718096;
-  font-weight: 500;
-}
-
-.stat-value {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #2d3748;
-}
-
-.stat-value.price {
-  font-size: 1.125rem;
-  color: #667eea;
-}
-
-.stat-value.change.positive {
-  color: #38a169;
-}
-
-.stat-value.change.negative {
-  color: #e53e3e;
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-  .container {
-    padding: 0 1rem;
-  }
-  
-  .page-title {
-    font-size: 2rem;
-  }
-  
-  .search-container {
-    margin: 1.5rem 0;
-  }
-  
-  .search-box {
-    padding: 0.25rem;
-  }
-  
-  .search-input {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
-  }
-  
-  .search-button, .clear-button {
-    width: 35px;
-    height: 35px;
-  }
-  
-  .crypto-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-  
-  .crypto-card {
-    padding: 1rem;
-  }
-  
-  .crypto-stats {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .page-title {
-    font-size: 1.75rem;
-  }
-  
-  .search-container {
-    margin: 1rem 0;
-  }
-  
-  .search-input {
-    font-size: 0.8rem;
-    padding: 0.5rem;
-  }
-  
-  .search-button, .clear-button {
-    width: 32px;
-    height: 32px;
-    font-size: 0.75rem;
-  }
-  
-  .crypto-header {
-    flex-direction: column;
-    gap: 1rem;
-    text-align: center;
-  }
-  
-  .crypto-info {
-    flex-direction: column;
-    text-align: center;
-  }
-}
-</style>

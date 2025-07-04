@@ -28,7 +28,7 @@ Creating all this by hand is very tedious and error prone, by getting Warp termi
 
 ![dummy data](./readme_images/aioutput.png)
 
-## Search
+I also used this functionality throughout the build to save time and simplify debugging - I can simply type "the search functionality is hanging" and Warp will debug and suggest fixes for me.  Another good usage was to ask it to replace the initial css styles with tailwind as i somehow missed that requirement when starting the code.
 
 ## How to run
 #### **Real Cryptocurrency Data:**
@@ -74,7 +74,7 @@ Creating all this by hand is very tedious and error prone, by getting Warp termi
 - **CSS Grid** for responsive layout
 
 #### **Backend:**
-- **Laravel 11** with Sail
+- **Laravel 12** with Sail
 - **RESTful API** endpoints
 - **MySQL database** with real CoinGecko data
 - **Scheduled jobs** (every 10 minutes)

@@ -1,6 +1,6 @@
 <template>
-  <div class="crypto-detail-page">
-    <div class="container">
+  <div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- Loading State -->
       <div v-if="pending" class="loading-container">
         <div class="loading-spinner"></div>
@@ -10,97 +10,112 @@
       <!-- Error State -->
       <div v-else-if="error" class="error-container">
         <p class="error-message">{{ error }}</p>
-        <div class="error-actions">
+        <div class="flex gap-4 justify-center items-center">
           <button @click="refresh()" class="retry-button">Try Again</button>
-          <NuxtLink to="/crypto" class="back-button">Back to List</NuxtLink>
+          <NuxtLink to="/crypto" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-all duration-300 hover:-translate-y-0.5 no-underline inline-block">
+            Back to List
+          </NuxtLink>
         </div>
       </div>
 
       <!-- Success State -->
-      <div v-else-if="cryptoDetail" class="crypto-detail fade-in">
+      <div v-else-if="cryptoDetail" class="fade-in">
         <!-- Header -->
-        <header class="crypto-header">
-          <NuxtLink to="/crypto" class="back-btn">← Back to Cryptocurrencies</NuxtLink>
+        <header class="mb-12">
+          <NuxtLink to="/crypto" class="inline-block mb-8 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-full transition-all duration-300 hover:-translate-y-1 font-medium no-underline">
+            ← Back to Cryptocurrencies
+          </NuxtLink>
           
-          <div class="crypto-title-section">
-            <div class="crypto-main-info">
-              <div class="crypto-icon-large">
-                <img 
-                  v-if="cryptoDetail.image" 
-                  :src="cryptoDetail.image" 
-                  :alt="cryptoDetail.name"
-                  class="crypto-image-large"
-                  @error="handleImageError"
-                />
-                <span v-else class="crypto-symbol-large">{{ cryptoDetail.symbol }}</span>
+          <div class="bg-white rounded-2xl p-8 shadow-xl border border-gray-200">
+            <div class="flex flex-col lg:flex-row justify-between items-center gap-8">
+              <div class="flex items-center gap-6">
+                <div class="w-20 h-20 rounded-full bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center overflow-hidden">
+                  <img 
+                    v-if="cryptoDetail.image" 
+                    :src="cryptoDetail.image" 
+                    :alt="cryptoDetail.name"
+                    class="w-full h-full object-cover rounded-full"
+                    @error="handleImageError"
+                  />
+                  <span v-else class="text-white font-bold text-xl">{{ cryptoDetail.symbol }}</span>
+                </div>
+                <div>
+                  <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">{{ cryptoDetail.name }}</h1>
+                  <span class="text-xl text-gray-600 font-semibold">{{ cryptoDetail.symbol }}</span>
+                  <div class="text-sm text-primary-600 mt-2 font-medium">#{{ cryptoDetail.market_cap_rank }} by Market Cap</div>
+                </div>
               </div>
-              <div class="crypto-title-info">
-                <h1 class="crypto-name">{{ cryptoDetail.name }}</h1>
-                <span class="crypto-symbol">{{ cryptoDetail.symbol }}</span>
-                <div class="crypto-rank">#{{ cryptoDetail.market_cap_rank }} by Market Cap</div>
-              </div>
-            </div>
-            
-            <div class="crypto-price-section">
-              <div class="current-price">{{ cryptoDetail.formatted_price }}</div>
-              <div 
-                :class="['price-change', cryptoDetail.price_change_percentage_24h >= 0 ? 'positive' : 'negative']"
-              >
-                {{ formatPercentage(cryptoDetail.price_change_percentage_24h) }}% (24h)
+              
+              <div class="text-center lg:text-right">
+                <div class="text-4xl md:text-5xl font-bold text-primary-600 mb-2">{{ cryptoDetail.formatted_price }}</div>
+                <div 
+                  :class="[
+                    'text-xl font-semibold',
+                    cryptoDetail.price_change_percentage_24h >= 0 ? 'text-success-500' : 'text-danger-500'
+                  ]"
+                >
+                  {{ formatPercentage(cryptoDetail.price_change_percentage_24h) }}% (24h)
+                </div>
               </div>
             </div>
           </div>
         </header>
 
         <!-- Main Stats Grid -->
-        <div class="stats-grid">
+        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 mb-8">
           <!-- Market Data -->
-          <div class="stats-card">
-            <h3 class="stats-title">Market Data</h3>
-            <div class="stats-list">
-              <div class="stat-row">
-                <span class="stat-label">Market Cap</span>
-                <span class="stat-value">{{ cryptoDetail.formatted_market_cap }}</span>
+          <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
+            <h3 class="text-xl font-semibold text-gray-800 mb-6 pb-3 border-b-2 border-gray-200">Market Data</h3>
+            <div class="space-y-4">
+              <div class="flex justify-between items-center py-2">
+                <span class="text-sm text-gray-500 font-medium">Market Cap</span>
+                <span class="text-base font-semibold text-gray-800 text-right">{{ cryptoDetail.formatted_market_cap }}</span>
               </div>
-              <div class="stat-row">
-                <span class="stat-label">24h Volume</span>
-                <span class="stat-value">{{ formatVolume(cryptoDetail.total_volume) }}</span>
+              <div class="flex justify-between items-center py-2">
+                <span class="text-sm text-gray-500 font-medium">24h Volume</span>
+                <span class="text-base font-semibold text-gray-800 text-right">{{ formatVolume(cryptoDetail.total_volume) }}</span>
               </div>
-              <div class="stat-row">
-                <span class="stat-label">Fully Diluted Valuation</span>
-                <span class="stat-value">{{ formatVolume(cryptoDetail.fully_diluted_valuation) }}</span>
+              <div class="flex justify-between items-center py-2">
+                <span class="text-sm text-gray-500 font-medium">Fully Diluted Valuation</span>
+                <span class="text-base font-semibold text-gray-800 text-right">{{ formatVolume(cryptoDetail.fully_diluted_valuation) }}</span>
               </div>
-              <div class="stat-row">
-                <span class="stat-label">Circulating Supply</span>
-                <span class="stat-value">{{ formatSupply(cryptoDetail.circulating_supply) }} {{ cryptoDetail.symbol }}</span>
+              <div class="flex justify-between items-center py-2">
+                <span class="text-sm text-gray-500 font-medium">Circulating Supply</span>
+                <span class="text-base font-semibold text-gray-800 text-right">{{ formatSupply(cryptoDetail.circulating_supply) }} {{ cryptoDetail.symbol }}</span>
               </div>
             </div>
           </div>
 
           <!-- Price Data -->
-          <div class="stats-card">
-            <h3 class="stats-title">Price Data</h3>
-            <div class="stats-list">
-              <div class="stat-row">
-                <span class="stat-label">24h High</span>
-                <span class="stat-value">{{ formatPrice(cryptoDetail.high_24h) }}</span>
+          <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
+            <h3 class="text-xl font-semibold text-gray-800 mb-6 pb-3 border-b-2 border-gray-200">Price Data</h3>
+            <div class="space-y-4">
+              <div class="flex justify-between items-center py-2">
+                <span class="text-sm text-gray-500 font-medium">24h High</span>
+                <span class="text-base font-semibold text-gray-800 text-right">{{ formatPrice(cryptoDetail.high_24h) }}</span>
               </div>
-              <div class="stat-row">
-                <span class="stat-label">24h Low</span>
-                <span class="stat-value">{{ formatPrice(cryptoDetail.low_24h) }}</span>
+              <div class="flex justify-between items-center py-2">
+                <span class="text-sm text-gray-500 font-medium">24h Low</span>
+                <span class="text-base font-semibold text-gray-800 text-right">{{ formatPrice(cryptoDetail.low_24h) }}</span>
               </div>
-              <div class="stat-row">
-                <span class="stat-label">24h Change</span>
+              <div class="flex justify-between items-center py-2">
+                <span class="text-sm text-gray-500 font-medium">24h Change</span>
                 <span 
-                  :class="['stat-value', cryptoDetail.price_change_24h >= 0 ? 'positive' : 'negative']"
+                  :class="[
+                    'text-base font-semibold text-right',
+                    cryptoDetail.price_change_24h >= 0 ? 'text-success-500' : 'text-danger-500'
+                  ]"
                 >
                   {{ formatPrice(cryptoDetail.price_change_24h) }}
                 </span>
               </div>
-              <div class="stat-row">
-                <span class="stat-label">Market Cap Change (24h)</span>
+              <div class="flex justify-between items-center py-2">
+                <span class="text-sm text-gray-500 font-medium">Market Cap Change (24h)</span>
                 <span 
-                  :class="['stat-value', cryptoDetail.market_cap_change_percentage_24h >= 0 ? 'positive' : 'negative']"
+                  :class="[
+                    'text-base font-semibold text-right',
+                    cryptoDetail.market_cap_change_percentage_24h >= 0 ? 'text-success-500' : 'text-danger-500'
+                  ]"
                 >
                   {{ formatPercentage(cryptoDetail.market_cap_change_percentage_24h) }}%
                 </span>
@@ -109,60 +124,62 @@
           </div>
 
           <!-- Supply Information -->
-          <div class="stats-card">
-            <h3 class="stats-title">Supply Information</h3>
-            <div class="stats-list">
-              <div class="stat-row">
-                <span class="stat-label">Total Supply</span>
-                <span class="stat-value">{{ formatSupply(cryptoDetail.total_supply) }} {{ cryptoDetail.symbol }}</span>
+          <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
+            <h3 class="text-xl font-semibold text-gray-800 mb-6 pb-3 border-b-2 border-gray-200">Supply Information</h3>
+            <div class="space-y-4">
+              <div class="flex justify-between items-center py-2">
+                <span class="text-sm text-gray-500 font-medium">Total Supply</span>
+                <span class="text-base font-semibold text-gray-800 text-right">{{ formatSupply(cryptoDetail.total_supply) }} {{ cryptoDetail.symbol }}</span>
               </div>
-              <div class="stat-row">
-                <span class="stat-label">Max Supply</span>
-                <span class="stat-value">
+              <div class="flex justify-between items-center py-2">
+                <span class="text-sm text-gray-500 font-medium">Max Supply</span>
+                <span class="text-base font-semibold text-gray-800 text-right">
                   {{ cryptoDetail.max_supply ? formatSupply(cryptoDetail.max_supply) + ' ' + cryptoDetail.symbol : 'N/A' }}
                 </span>
               </div>
-              <div class="stat-row">
-                <span class="stat-label">Circulating Supply</span>
-                <span class="stat-value">{{ formatSupply(cryptoDetail.circulating_supply) }} {{ cryptoDetail.symbol }}</span>
+              <div class="flex justify-between items-center py-2">
+                <span class="text-sm text-gray-500 font-medium">Circulating Supply</span>
+                <span class="text-base font-semibold text-gray-800 text-right">{{ formatSupply(cryptoDetail.circulating_supply) }} {{ cryptoDetail.symbol }}</span>
               </div>
             </div>
           </div>
 
           <!-- All-Time Records -->
-          <div class="stats-card">
-            <h3 class="stats-title">All-Time Records</h3>
-            <div class="stats-list">
-              <div class="stat-row">
-                <span class="stat-label">All-Time High</span>
-                <span class="stat-value">{{ formatPrice(cryptoDetail.ath) }}</span>
+          <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
+            <h3 class="text-xl font-semibold text-gray-800 mb-6 pb-3 border-b-2 border-gray-200">All-Time Records</h3>
+            <div class="space-y-4">
+              <div class="flex justify-between items-center py-2">
+                <span class="text-sm text-gray-500 font-medium">All-Time High</span>
+                <span class="text-base font-semibold text-gray-800 text-right">{{ formatPrice(cryptoDetail.ath) }}</span>
               </div>
-              <div class="stat-row">
-                <span class="stat-label">ATH Change</span>
-                <span class="stat-value negative">{{ formatPercentage(cryptoDetail.ath_change_percentage) }}%</span>
+              <div class="flex justify-between items-center py-2">
+                <span class="text-sm text-gray-500 font-medium">ATH Change</span>
+                <span class="text-base font-semibold text-danger-500 text-right">{{ formatPercentage(cryptoDetail.ath_change_percentage) }}%</span>
               </div>
-              <div class="stat-row">
-                <span class="stat-label">ATH Date</span>
-                <span class="stat-value">{{ formatDate(cryptoDetail.ath_date) }}</span>
+              <div class="flex justify-between items-center py-2">
+                <span class="text-sm text-gray-500 font-medium">ATH Date</span>
+                <span class="text-base font-semibold text-gray-800 text-right">{{ formatDate(cryptoDetail.ath_date) }}</span>
               </div>
-              <div class="stat-row">
-                <span class="stat-label">All-Time Low</span>
-                <span class="stat-value">{{ formatPrice(cryptoDetail.atl) }}</span>
+              <div class="flex justify-between items-center py-2">
+                <span class="text-sm text-gray-500 font-medium">All-Time Low</span>
+                <span class="text-base font-semibold text-gray-800 text-right">{{ formatPrice(cryptoDetail.atl) }}</span>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Last Updated -->
-        <div class="last-updated-section">
-          <p class="last-updated">Last updated: {{ formatDate(cryptoDetail.last_updated) }}</p>
+        <div class="text-center mt-8">
+          <p class="text-sm text-gray-500 italic">Last updated: {{ formatDate(cryptoDetail.last_updated) }}</p>
         </div>
       </div>
 
       <!-- Empty State -->
       <div v-else class="error-container">
         <p class="error-message">Cryptocurrency not found</p>
-        <NuxtLink to="/crypto" class="back-button">Back to List</NuxtLink>
+        <NuxtLink to="/crypto" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-all duration-300 hover:-translate-y-0.5 no-underline inline-block">
+          Back to List
+        </NuxtLink>
       </div>
     </div>
   </div>
@@ -310,272 +327,3 @@ useHead({
 
 // useFetch handles route changes automatically through the watch option
 </script>
-
-<style scoped>
-.crypto-detail-page {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  padding: 2rem 0;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 2rem;
-}
-
-.crypto-header {
-  margin-bottom: 3rem;
-}
-
-.back-btn {
-  display: inline-block;
-  margin-bottom: 2rem;
-  padding: 0.5rem 1rem;
-  background-color: #667eea;
-  color: white;
-  text-decoration: none;
-  border-radius: 25px;
-  transition: all 0.3s ease;
-  font-weight: 500;
-}
-
-.back-btn:hover {
-  background-color: #5a67d8;
-  transform: translateY(-2px);
-}
-
-.crypto-title-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: white;
-  padding: 2rem;
-  border-radius: 20px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-}
-
-.crypto-main-info {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-.crypto-icon-large {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.crypto-image-large {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
-
-.crypto-symbol-large {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: white;
-}
-
-.crypto-name {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #2d3748;
-  margin: 0 0 0.5rem 0;
-}
-
-.crypto-symbol {
-  font-size: 1.25rem;
-  color: #718096;
-  font-weight: 600;
-}
-
-.crypto-rank {
-  font-size: 0.875rem;
-  color: #667eea;
-  margin-top: 0.5rem;
-  font-weight: 500;
-}
-
-.crypto-price-section {
-  text-align: right;
-}
-
-.current-price {
-  font-size: 3rem;
-  font-weight: 700;
-  color: #667eea;
-  margin-bottom: 0.5rem;
-}
-
-.price-change {
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.price-change.positive {
-  color: #38a169;
-}
-
-.price-change.negative {
-  color: #e53e3e;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  margin-bottom: 2rem;
-}
-
-.stats-card {
-  background: white;
-  padding: 2rem;
-  border-radius: 16px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e2e8f0;
-}
-
-.stats-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #2d3748;
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid #e2e8f0;
-}
-
-.stats-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.stat-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 0;
-}
-
-.stat-label {
-  font-size: 0.875rem;
-  color: #718096;
-  font-weight: 500;
-}
-
-.stat-value {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #2d3748;
-  text-align: right;
-}
-
-.stat-value.positive {
-  color: #38a169;
-}
-
-.stat-value.negative {
-  color: #e53e3e;
-}
-
-.last-updated-section {
-  text-align: center;
-  margin-top: 2rem;
-}
-
-.last-updated {
-  font-size: 0.875rem;
-  color: #718096;
-  font-style: italic;
-}
-
-.error-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  align-items: center;
-}
-
-.back-button {
-  padding: 0.5rem 1rem;
-  background-color: #718096;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  display: inline-block;
-}
-
-.back-button:hover {
-  background-color: #4a5568;
-  transform: translateY(-2px);
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-  .container {
-    padding: 0 1rem;
-  }
-  
-  .crypto-title-section {
-    flex-direction: column;
-    gap: 2rem;
-    text-align: center;
-  }
-  
-  .crypto-main-info {
-    flex-direction: column;
-    text-align: center;
-  }
-  
-  .crypto-name {
-    font-size: 2rem;
-  }
-  
-  .current-price {
-    font-size: 2rem;
-  }
-  
-  .stats-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-  
-  .stats-card {
-    padding: 1.5rem;
-  }
-  
-  .stat-row {
-    flex-direction: column;
-    gap: 0.25rem;
-    text-align: center;
-  }
-}
-
-@media (max-width: 480px) {
-  .crypto-name {
-    font-size: 1.75rem;
-  }
-  
-  .current-price {
-    font-size: 1.75rem;
-  }
-  
-  .crypto-icon-large {
-    width: 60px;
-    height: 60px;
-  }
-}
-</style>
