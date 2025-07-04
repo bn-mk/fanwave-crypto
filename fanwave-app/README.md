@@ -1,7 +1,11 @@
 # Fanwave Digital Tech Assesment
 Thanks for checking out my technical assessment.  It's been a fun challenge getting stuck into this work - especially after a couple of months without touching a line of code! 
 
+I've decided to implement this task in the following way.
 
+Create a Job in Laravel to populate the DB with coin data from Coin Gecko - this API can be accessed from the Nuxt app directly without the need for Laravel but for this task i'm adding this storage step to allow for future transformation of the data and to add a level of authenication.
+
+This will also reduce the amount of calls to the Coin Gecko API and allow more control over a users access and ofor more features in the future, for example, I can imagine a user wanting to save a list of favourite coins and i would implement the user login and profile storage in Laravel
 
 ## Local Environment
 I'm developing on my windows laptop using WSL2 to give me a more familiar dev environment and set of tools - i've pretty much only ever used linux or MacOS for development work so there have been some interesting challenges getting the usual stack running under this setup.  I'm using an Ubuntu box and running laravel in Docker via laravel sail.  The nuxt front end is running under it's own local server.  With a bit more time i'd like to have set up docker compose to run nuxt in it's own container so i could spin everything up with one command.
