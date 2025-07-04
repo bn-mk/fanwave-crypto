@@ -81,13 +81,15 @@ class Cryptocurrency extends Model
      */
     public function getFormattedMarketCapAttribute()
     {
-        if ($this->market_cap >= 1e12) {
-            return '$' . number_format($this->market_cap / 1e12, 2) . 'T';
-        } elseif ($this->market_cap >= 1e9) {
-            return '$' . number_format($this->market_cap / 1e9, 2) . 'B';
-        } elseif ($this->market_cap >= 1e6) {
-            return '$' . number_format($this->market_cap / 1e6, 2) . 'M';
+        $marketCap = $this->market_cap ?? 1e12; // Default to 1T for null values
+        
+        if ($marketCap >= 1e12) {
+            return '$' . number_format($marketCap / 1e12, 2) . 'T';
+        } elseif ($marketCap >= 1e9) {
+            return '$' . number_format($marketCap / 1e9, 2) . 'B';
+        } elseif ($marketCap >= 1e6) {
+            return '$' . number_format($marketCap / 1e6, 2) . 'M';
         }
-        return '$' . number_format($this->market_cap, 2);
+        return '$' . number_format($marketCap, 2);
     }
 }
