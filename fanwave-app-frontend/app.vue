@@ -1,25 +1,5 @@
 <template>
-  <div id="app">
+  <div id="app" class="font-sans antialiased min-h-screen">
     <NuxtPage :key="$route.fullPath" />
   </div>
 </template>
-
-<style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  min-height: 100vh;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-}
-</style>
