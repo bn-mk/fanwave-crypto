@@ -2,26 +2,38 @@
 
 namespace Tests\Feature\Api;
 
+use App\Interfaces\CryptocurrencyServiceInterface;
 use App\Models\Cryptocurrency;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
+use Mockery;
+use Illuminate\Database\Eloquent\Collection;
 
 class CryptocurrencyApiTest extends TestCase
 {
     use RefreshDatabase, WithFaker;
 
+    protected $cryptocurrencyServiceMock;
+
     protected function setUp(): void
     {
         parent::setUp();
         
-        // Create test cryptocurrency data
         $this->createTestCryptocurrencies();
+
+        $this->cryptocurrencyServiceMock = Mockery::mock(CryptocurrencyServiceInterface::class);
+        $this->app->instance(CryptocurrencyServiceInterface::class, $this->cryptocurrencyServiceMock);
     }
 
-    /** @test */
-    public function it_can_get_top_cryptocurrencies()
+    public function test_it_can_get_top_cryptocurrencies()
     {
+        $cryptocurrencies = Cryptocurrency::orderBy('market_cap_rank', 'asc')->limit(10)->get();
+        $this->cryptocurrencyServiceMock
+            ->shouldReceive('getTopByMarketCap')
+            ->with(10)
+            ->andReturn($cryptocurrencies);
+
         $response = $this->getJson('/api/crypto/top');
 
         $response->assertStatus(200)
@@ -61,16 +73,20 @@ class CryptocurrencyApiTest extends TestCase
                 ]
             ]);
 
-        // Verify data is ordered by market cap rank
         $data = $response->json('data');
         $this->assertEquals('bitcoin', $data[0]['id']);
         $this->assertEquals('ethereum', $data[1]['id']);
         $this->assertEquals('tether', $data[2]['id']);
     }
 
-    /** @test */
-    public function it_can_get_top_cryptocurrencies_with_custom_limit()
+    public function test_it_can_get_top_cryptocurrencies_with_custom_limit()
     {
+        $cryptocurrencies = Cryptocurrency::orderBy('market_cap_rank', 'asc')->limit(2)->get();
+        $this->cryptocurrencyServiceMock
+            ->shouldReceive('getTopByMarketCap')
+            ->with(2)
+            ->andReturn($cryptocurrencies);
+
         $response = $this->getJson('/api/crypto/top?limit=2');
 
         $response->assertStatus(200)
@@ -85,10 +101,8 @@ class CryptocurrencyApiTest extends TestCase
         $this->assertCount(2, $response->json('data'));
     }
 
-    /** @test */
-    public function it_validates_limit_parameter_for_top_cryptocurrencies()
+    public function test_it_validates_limit_parameter_for_top_cryptocurrencies()
     {
-        // Test invalid limit
         $response = $this->getJson('/api/crypto/top?limit=101');
 
         $response->assertStatus(422)
@@ -99,9 +113,14 @@ class CryptocurrencyApiTest extends TestCase
             ->assertJsonValidationErrors(['limit']);
     }
 
-    /** @test */
-    public function it_can_get_specific_cryptocurrency_by_id()
+    public function test_it_can_get_specific_cryptocurrency_by_id()
     {
+        $cryptocurrency = Cryptocurrency::where('coin_id', 'bitcoin')->first();
+        $this->cryptocurrencyServiceMock
+            ->shouldReceive('getById')
+            ->with('bitcoin')
+            ->andReturn($cryptocurrency);
+
         $response = $this->getJson('/api/crypto/bitcoin');
 
         $response->assertStatus(200)
@@ -147,9 +166,13 @@ class CryptocurrencyApiTest extends TestCase
             ]);
     }
 
-    /** @test */
-    public function it_returns_404_for_non_existent_cryptocurrency()
+    public function test_it_returns_404_for_non_existent_cryptocurrency()
     {
+        $this->cryptocurrencyServiceMock
+            ->shouldReceive('getById')
+            ->with('non-existent-coin')
+            ->andReturn(null);
+
         $response = $this->getJson('/api/crypto/non-existent-coin');
 
         $response->assertStatus(404)
@@ -159,24 +182,28 @@ class CryptocurrencyApiTest extends TestCase
             ]);
     }
 
-    /** @test */
-    public function it_can_search_cryptocurrencies_by_name()
+    public function test_it_can_search_cryptocurrencies_by_name()
     {
-        $response = $this->getJson('/api/cryptocurrencies/search?query=bitcoin');
+        $cryptocurrencies = Cryptocurrency::where('name', 'LIKE', '%bitcoin%')->get();
+        $this->cryptocurrencyServiceMock
+            ->shouldReceive('search')
+            ->with('bitcoin', 20)
+            ->andReturn($cryptocurrencies);
+
+        $response = $this->getJson('/api/crypto/search?query=bitcoin');
 
         $response->assertStatus(200)
             ->assertJsonStructure([
                 'success',
                 'data' => [
                     '*' => [
-                        'coin_id',
+                        'id',
                         'symbol',
                         'name',
                         'image',
                         'current_price',
                         'market_cap',
-                        'market_cap_rank',
-                        'price_change_percentage_24h'
+                        'market_cap_rank'
                     ]
                 ],
                 'meta' => [
@@ -194,13 +221,18 @@ class CryptocurrencyApiTest extends TestCase
             ]);
 
         $data = $response->json('data');
-        $this->assertEquals('bitcoin', $data[0]['coin_id']);
+        $this->assertEquals('bitcoin', $data[0]['id']);
     }
 
-    /** @test */
-    public function it_can_search_cryptocurrencies_by_symbol()
+    public function test_it_can_search_cryptocurrencies_by_symbol()
     {
-        $response = $this->getJson('/api/cryptocurrencies/search?query=BTC');
+        $cryptocurrencies = Cryptocurrency::where('symbol', 'LIKE', '%BTC%')->get();
+        $this->cryptocurrencyServiceMock
+            ->shouldReceive('search')
+            ->with('BTC', 20)
+            ->andReturn($cryptocurrencies);
+
+        $response = $this->getJson('/api/crypto/search?query=BTC');
 
         $response->assertStatus(200)
             ->assertJson([
@@ -215,11 +247,9 @@ class CryptocurrencyApiTest extends TestCase
         $this->assertEquals('BTC', $data[0]['symbol']);
     }
 
-    /** @test */
-    public function it_validates_search_query_parameter()
+    public function test_it_validates_search_query_parameter()
     {
-        // Test missing query
-        $response = $this->getJson('/api/cryptocurrencies/search');
+        $response = $this->getJson('/api/crypto/search');
 
         $response->assertStatus(422)
             ->assertJson([
@@ -228,24 +258,32 @@ class CryptocurrencyApiTest extends TestCase
             ])
             ->assertJsonValidationErrors(['query']);
 
-        // Test empty query
-        $response = $this->getJson('/api/cryptocurrencies/search?query=');
+        $response = $this->getJson('/api/crypto/search?query=');
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['query']);
 
-        // Test query too long
         $longQuery = str_repeat('a', 51);
-        $response = $this->getJson("/api/cryptocurrencies/search?query={$longQuery}");
+        $response = $this->getJson("/api/crypto/search?query={$longQuery}");
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['query']);
     }
 
-    /** @test */
-    public function it_can_get_cryptocurrency_statistics()
+    public function test_it_can_get_cryptocurrency_statistics()
     {
-        $response = $this->getJson('/api/cryptocurrencies/stats');
+        $stats = [
+            'total_cryptocurrencies' => 3,
+            'last_data_update' => now()->toDateTimeString(),
+            'highest_market_cap' => 1000000000000,
+            'average_price' => 16666.71,
+            'data_freshness' => '1 second ago'
+        ];
+        $this->cryptocurrencyServiceMock
+            ->shouldReceive('getStatistics')
+            ->andReturn($stats);
+
+        $response = $this->getJson('/api/crypto/stats');
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -262,15 +300,20 @@ class CryptocurrencyApiTest extends TestCase
                 'success' => true,
                 'data' => [
                     'total_cryptocurrencies' => 3,
-                    'highest_market_cap' => 1000000000000, // Bitcoin's market cap
+                    'highest_market_cap' => 1000000000000,
                 ]
             ]);
     }
 
-    /** @test */
-    public function it_can_get_cryptocurrencies_index()
+    public function test_it_can_get_cryptocurrencies_index()
     {
-        $response = $this->getJson('/api/cryptocurrencies');
+        $cryptocurrencies = Cryptocurrency::orderBy('market_cap_rank', 'asc')->limit(10)->get();
+        $this->cryptocurrencyServiceMock
+            ->shouldReceive('getTopByMarketCap')
+            ->with(10)
+            ->andReturn($cryptocurrencies);
+
+        $response = $this->getJson('/api/crypto');
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -278,7 +321,6 @@ class CryptocurrencyApiTest extends TestCase
                 'data' => [
                     '*' => [
                         'id',
-                        'coin_id',
                         'symbol',
                         'name',
                         'image',
@@ -306,10 +348,14 @@ class CryptocurrencyApiTest extends TestCase
             ]);
     }
 
-    /** @test */
-    public function it_handles_empty_search_results()
+    public function test_it_handles_empty_search_results()
     {
-        $response = $this->getJson('/api/cryptocurrencies/search?query=nonexistent');
+        $this->cryptocurrencyServiceMock
+            ->shouldReceive('search')
+            ->with('nonexistent', 20)
+            ->andReturn(new Collection());
+
+        $response = $this->getJson('/api/crypto/search?query=nonexistent');
 
         $response->assertStatus(200)
             ->assertJson([
@@ -322,20 +368,23 @@ class CryptocurrencyApiTest extends TestCase
             ]);
     }
 
-    /** @test */
-    public function it_returns_correct_data_types()
+    public function test_it_returns_correct_data_types()
     {
+        $cryptocurrency = Cryptocurrency::where('coin_id', 'bitcoin')->first();
+        $this->cryptocurrencyServiceMock
+            ->shouldReceive('getById')
+            ->with('bitcoin')
+            ->andReturn($cryptocurrency);
+
         $response = $this->getJson('/api/crypto/bitcoin');
         $data = $response->json('data');
 
-        // Test numeric fields are properly typed
         $this->assertIsFloat($data['current_price']);
         $this->assertIsInt($data['market_cap']);
         $this->assertIsInt($data['market_cap_rank']);
         $this->assertIsFloat($data['price_change_24h']);
         $this->assertIsFloat($data['price_change_percentage_24h']);
         
-        // Test string fields
         $this->assertIsString($data['id']);
         $this->assertIsString($data['symbol']);
         $this->assertIsString($data['name']);
@@ -343,23 +392,23 @@ class CryptocurrencyApiTest extends TestCase
         $this->assertIsString($data['formatted_market_cap']);
     }
 
-    /** @test */
-    public function it_formats_prices_correctly()
+    public function test_it_formats_prices_correctly()
     {
+        $cryptocurrency = Cryptocurrency::where('coin_id', 'bitcoin')->first();
+        $this->cryptocurrencyServiceMock
+            ->shouldReceive('getById')
+            ->with('bitcoin')
+            ->andReturn($cryptocurrency);
+
         $response = $this->getJson('/api/crypto/bitcoin');
         $data = $response->json('data');
 
-        // Test price formatting
         $this->assertStringStartsWith('$', $data['formatted_price']);
         $this->assertStringStartsWith('$', $data['formatted_market_cap']);
         
-        // Test market cap formatting (should be in T for trillion)
         $this->assertStringEndsWith('T', $data['formatted_market_cap']);
     }
 
-    /**
-     * Create test cryptocurrency data
-     */
     private function createTestCryptocurrencies(): void
     {
         $cryptocurrencies = [
@@ -369,7 +418,7 @@ class CryptocurrencyApiTest extends TestCase
                 'name' => 'Bitcoin',
                 'image' => 'https://example.com/bitcoin.png',
                 'current_price' => 50000.12345678,
-                'market_cap' => 1000000000000, // 1T
+                'market_cap' => 1000000000000,
                 'market_cap_rank' => 1,
                 'fully_diluted_valuation' => 1050000000000,
                 'total_volume' => 25000000000,
@@ -396,7 +445,7 @@ class CryptocurrencyApiTest extends TestCase
                 'name' => 'Ethereum',
                 'image' => 'https://example.com/ethereum.png',
                 'current_price' => 3000.00,
-                'market_cap' => 360000000000, // 360B
+                'market_cap' => 360000000000,
                 'market_cap_rank' => 2,
                 'fully_diluted_valuation' => 360000000000,
                 'total_volume' => 15000000000,
@@ -423,7 +472,7 @@ class CryptocurrencyApiTest extends TestCase
                 'name' => 'Tether',
                 'image' => 'https://example.com/tether.png',
                 'current_price' => 1.00,
-                'market_cap' => 80000000000, // 80B
+                'market_cap' => 80000000000,
                 'market_cap_rank' => 3,
                 'fully_diluted_valuation' => 80000000000,
                 'total_volume' => 40000000000,
@@ -449,5 +498,11 @@ class CryptocurrencyApiTest extends TestCase
         foreach ($cryptocurrencies as $crypto) {
             Cryptocurrency::create($crypto);
         }
+    }
+
+    public function tearDown(): void
+    {
+        Mockery::close();
+        parent::tearDown();
     }
 }

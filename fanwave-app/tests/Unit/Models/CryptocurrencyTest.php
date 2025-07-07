@@ -10,8 +10,7 @@ class CryptocurrencyTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
-    public function it_can_create_a_cryptocurrency()
+    public function test_it_can_create_a_cryptocurrency(): void
     {
         $cryptocurrency = Cryptocurrency::create([
             'coin_id' => 'bitcoin',
@@ -35,8 +34,7 @@ class CryptocurrencyTest extends TestCase
         $this->assertEquals('Bitcoin', $cryptocurrency->name);
     }
 
-    /** @test */
-    public function it_casts_numeric_fields_correctly()
+    public function test_it_casts_numeric_fields_correctly(): void
     {
         $cryptocurrency = Cryptocurrency::create([
             'coin_id' => 'bitcoin',
@@ -49,23 +47,19 @@ class CryptocurrencyTest extends TestCase
             'last_updated' => now(),
         ]);
 
-        // Test decimal casting
         $this->assertIsNumeric($cryptocurrency->current_price);
         $this->assertEquals('50000.12345678', $cryptocurrency->current_price);
 
-        // Test integer casting
         $this->assertIsInt($cryptocurrency->market_cap);
         $this->assertEquals(1000000000000, $cryptocurrency->market_cap);
 
         $this->assertIsInt($cryptocurrency->market_cap_rank);
         $this->assertEquals(1, $cryptocurrency->market_cap_rank);
 
-        // Test decimal casting with precision
         $this->assertEquals('2.5432', $cryptocurrency->price_change_percentage_24h);
     }
 
-    /** @test */
-    public function it_casts_datetime_fields_correctly()
+    public function test_it_casts_datetime_fields_correctly(): void
     {
         $now = now();
         $cryptocurrency = Cryptocurrency::create([
@@ -85,10 +79,8 @@ class CryptocurrencyTest extends TestCase
         $this->assertInstanceOf(\Carbon\Carbon::class, $cryptocurrency->last_updated);
     }
 
-    /** @test */
-    public function it_can_scope_top_by_market_cap()
+    public function test_it_can_scope_top_by_market_cap(): void
     {
-        // Create test cryptocurrencies with different market cap ranks
         Cryptocurrency::create([
             'coin_id' => 'bitcoin',
             'symbol' => 'BTC',
@@ -119,7 +111,6 @@ class CryptocurrencyTest extends TestCase
             'last_updated' => now(),
         ]);
 
-        // Create one without market_cap_rank to test filtering
         Cryptocurrency::create([
             'coin_id' => 'unknown',
             'symbol' => 'UNK',
@@ -130,20 +121,17 @@ class CryptocurrencyTest extends TestCase
             'last_updated' => now(),
         ]);
 
-        // Test the scope
         $topCryptos = Cryptocurrency::topByMarketCap(2)->get();
 
         $this->assertCount(2, $topCryptos);
         $this->assertEquals('bitcoin', $topCryptos[0]->coin_id);
         $this->assertEquals('ethereum', $topCryptos[1]->coin_id);
 
-        // Test default limit
         $topCryptosDefault = Cryptocurrency::topByMarketCap()->get();
-        $this->assertCount(3, $topCryptosDefault); // Should exclude the one without rank
+        $this->assertCount(3, $topCryptosDefault);
     }
 
-    /** @test */
-    public function it_has_formatted_price_attribute()
+    public function test_it_has_formatted_price_attribute(): void
     {
         $cryptocurrency = Cryptocurrency::create([
             'coin_id' => 'bitcoin',
@@ -158,55 +146,50 @@ class CryptocurrencyTest extends TestCase
         $this->assertEquals('$50,000.12', $cryptocurrency->formatted_price);
     }
 
-    /** @test */
-    public function it_has_formatted_market_cap_attribute()
+    public function test_it_has_formatted_market_cap_attribute(): void
     {
-        // Test trillion formatting
         $bitcoin = Cryptocurrency::create([
             'coin_id' => 'bitcoin',
             'symbol' => 'BTC',
             'name' => 'Bitcoin',
             'current_price' => 50000.00,
-            'market_cap' => 1000000000000, // 1T
+            'market_cap' => 1000000000000,
             'market_cap_rank' => 1,
             'last_updated' => now(),
         ]);
 
         $this->assertEquals('$1.00T', $bitcoin->formatted_market_cap);
 
-        // Test billion formatting
         $ethereum = Cryptocurrency::create([
             'coin_id' => 'ethereum',
             'symbol' => 'ETH',
             'name' => 'Ethereum',
             'current_price' => 3000.00,
-            'market_cap' => 360000000000, // 360B
+            'market_cap' => 360000000000,
             'market_cap_rank' => 2,
             'last_updated' => now(),
         ]);
 
         $this->assertEquals('$360.00B', $ethereum->formatted_market_cap);
 
-        // Test million formatting
         $smallCoin = Cryptocurrency::create([
             'coin_id' => 'small-coin',
             'symbol' => 'SMALL',
             'name' => 'Small Coin',
             'current_price' => 1.00,
-            'market_cap' => 50000000, // 50M
+            'market_cap' => 50000000,
             'market_cap_rank' => 100,
             'last_updated' => now(),
         ]);
 
         $this->assertEquals('$50.00M', $smallCoin->formatted_market_cap);
 
-        // Test regular formatting for smaller amounts
         $tinyCoin = Cryptocurrency::create([
             'coin_id' => 'tiny-coin',
             'symbol' => 'TINY',
             'name' => 'Tiny Coin',
             'current_price' => 0.01,
-            'market_cap' => 500000, // 500K
+            'market_cap' => 500000,
             'market_cap_rank' => 1000,
             'last_updated' => now(),
         ]);
@@ -214,8 +197,7 @@ class CryptocurrencyTest extends TestCase
         $this->assertEquals('$500,000.00', $tinyCoin->formatted_market_cap);
     }
 
-    /** @test */
-    public function it_handles_null_market_cap_in_formatting()
+    public function test_it_handles_null_market_cap_in_formatting(): void
     {
         $cryptocurrency = Cryptocurrency::create([
             'coin_id' => 'test-coin',
@@ -230,8 +212,7 @@ class CryptocurrencyTest extends TestCase
         $this->assertEquals('$1.00T', $cryptocurrency->formatted_market_cap);
     }
 
-    /** @test */
-    public function it_can_be_mass_assigned()
+    public function test_it_can_be_mass_assigned(): void
     {
         $data = [
             'coin_id' => 'bitcoin',
@@ -276,10 +257,8 @@ class CryptocurrencyTest extends TestCase
         ]);
     }
 
-    /** @test */
-    public function it_excludes_cryptocurrencies_without_market_cap_rank_from_top_scope()
+    public function test_it_excludes_cryptocurrencies_without_market_cap_rank_from_top_scope(): void
     {
-        // Create crypto with market cap rank
         Cryptocurrency::create([
             'coin_id' => 'bitcoin',
             'symbol' => 'BTC',
@@ -290,7 +269,6 @@ class CryptocurrencyTest extends TestCase
             'last_updated' => now(),
         ]);
 
-        // Create crypto without market cap rank
         Cryptocurrency::create([
             'coin_id' => 'unranked',
             'symbol' => 'UNR',
