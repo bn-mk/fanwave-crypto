@@ -12,7 +12,8 @@ export default defineEventHandler(async (event) => {
 
   try {
     // Make the API call server-side
-    const response = await $fetch(`http://localhost/api/cryptocurrencies/search?query=${encodeURIComponent(searchQuery)}&limit=${limit}`)
+    const config = useRuntimeConfig()
+    const response = await $fetch(`${config.public.apiBase}/crypto/search?query=${encodeURIComponent(searchQuery)}&limit=${limit}`)
     return response
   } catch (error: any) {
     console.error('Server API search error:', error)
