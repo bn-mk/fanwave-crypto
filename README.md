@@ -14,7 +14,7 @@ I'm developing on my windows laptop using WSL2 to give me a more familiar dev en
 I'm using a typical feature branch stategy in git to keep track of changes.  main will be my production like branch and features are merged in as and when they are built for ease of control over the state of the app.  I've put the front end and backend code in the same monorepo for ease of sharing.  I would probably have seperate repos for this in a real world project.
 
 ## AI Integration
-I'm using Warp terminal which has an OpenAI integration allowing for tight integration between AI and my code.  I can ask the AI to scaffold my codeeeeeee for quick development and reduction of time writing boilerplate code.
+I'm using Warp terminal which has an OpenAI integration allowing for tight integration between AI and my code.  I can ask the AI to scaffold my code for quick development and reduction of time writing boilerplate code.
 
 For example, I asked it to create a landing page with the top 10 crypto currencies using dummy data in my nuxt app and it created the basic page for me.
 
