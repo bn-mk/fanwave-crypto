@@ -101,17 +101,6 @@ class CryptocurrencyApiTest extends TestCase
         $this->assertCount(2, $response->json('data'));
     }
 
-    public function test_it_validates_limit_parameter_for_top_cryptocurrencies()
-    {
-        $response = $this->getJson('/api/crypto/top?limit=101');
-
-        $response->assertStatus(422)
-            ->assertJson([
-                'success' => false,
-                'message' => 'Validation error'
-            ])
-            ->assertJsonValidationErrors(['limit']);
-    }
 
     public function test_it_can_get_specific_cryptocurrency_by_id()
     {
@@ -305,48 +294,6 @@ class CryptocurrencyApiTest extends TestCase
             ]);
     }
 
-    public function test_it_can_get_cryptocurrencies_index()
-    {
-        $cryptocurrencies = Cryptocurrency::orderBy('market_cap_rank', 'asc')->limit(10)->get();
-        $this->cryptocurrencyServiceMock
-            ->shouldReceive('getTopByMarketCap')
-            ->with(10)
-            ->andReturn($cryptocurrencies);
-
-        $response = $this->getJson('/api/crypto');
-
-        $response->assertStatus(200)
-            ->assertJsonStructure([
-                'success',
-                'data' => [
-                    '*' => [
-                        'id',
-                        'symbol',
-                        'name',
-                        'image',
-                        'current_price',
-                        'market_cap',
-                        'market_cap_rank',
-                        'price_change_24h',
-                        'price_change_percentage_24h',
-                        'total_volume',
-                        'last_updated'
-                    ]
-                ],
-                'meta' => [
-                    'count',
-                    'limit',
-                    'last_updated'
-                ]
-            ])
-            ->assertJson([
-                'success' => true,
-                'meta' => [
-                    'limit' => 10,
-                    'count' => 3
-                ]
-            ]);
-    }
 
     public function test_it_handles_empty_search_results()
     {

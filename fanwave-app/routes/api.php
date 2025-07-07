@@ -10,8 +10,7 @@ Route::get('/user', function (Request $request) {
 
 // Cryptocurrency API Routes
 Route::prefix('crypto')->group(function () {
-    // Get list of cryptocurrencies (paginated)
-    Route::get('/', [CryptocurrencyController::class, 'index']);
+    Route::get('/', [CryptocurrencyController::class, 'top']);
     
     // Get top cryptocurrencies by market cap
     Route::get('/top', [CryptocurrencyController::class, 'top']);
