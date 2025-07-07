@@ -9,7 +9,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 // Cryptocurrency API Routes
-Route::prefix('cryptocurrencies')->group(function () {
+Route::prefix('crypto')->group(function () {
     // Get list of cryptocurrencies (paginated)
     Route::get('/', [CryptocurrencyController::class, 'index']);
     
@@ -25,7 +25,3 @@ Route::prefix('cryptocurrencies')->group(function () {
     // Get specific cryptocurrency by coin_id
     Route::get('/{coinId}', [CryptocurrencyController::class, 'show']);
 });
-
-// Legacy/shorter routes for convenience
-Route::get('/crypto/top', [CryptocurrencyController::class, 'top']);
-Route::get('/crypto/{coinId}', [CryptocurrencyController::class, 'show']);

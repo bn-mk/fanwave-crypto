@@ -141,3 +141,83 @@ curl "http://localhost/api/crypto/bitcoin"
 # Test search
 curl "http://localhost/api/cryptocurrencies/search?query=eth"
 ```
+
+## Test Results
+docker exec fanwave-app-laravel.test-1 php artisan test
+
+   PASS  Tests\Unit\ExampleTest
+  ✓ that true is true                                                    5.08s  
+
+   PASS  Tests\Unit\Models\CryptocurrencyTest
+  ✓ it can create a cryptocurrency                                       0.34s  
+  ✓ it casts numeric fields correctly                                    0.16s  
+  ✓ it casts datetime fields correctly                                   0.14s  
+  ✓ it can scope top by market cap                                       0.17s  
+  ✓ it has formatted price attribute                                     0.14s  
+  ✓ it has formatted market cap attribute                                0.14s  
+  ✓ it handles null market cap in formatting                             0.13s  
+  ✓ it can be mass assigned                                              0.14s  
+  ✓ it excludes cryptocurrencies without market cap rank from top scope  0.13s  
+
+   PASS  Tests\Feature\Api\CryptocurrencyApiTest
+  ✓ it can get top cryptocurrencies                                      1.12s  
+  ✓ it can get top cryptocurrencies with custom limit                    0.15s  
+  ✓ it validates limit parameter for top cryptocurrencies                0.19s  
+  ✓ it can get specific cryptocurrency by id                             0.14s  
+  ✓ it returns 404 for non existent cryptocurrency                       0.14s  
+  ✓ it can search cryptocurrencies by name                               0.14s  
+  ✓ it can search cryptocurrencies by symbol                             0.14s  
+  ✓ it validates search query parameter                                  0.17s  
+  ✓ it can get cryptocurrency statistics                                 0.14s  
+  ✓ it can get cryptocurrencies index                                    0.14s  
+  ✓ it handles empty search results                                      0.14s  
+  ✓ it returns correct data types                                        0.16s  
+  ✓ it formats prices correctly                                          0.15s  
+
+   PASS  Tests\Feature\Auth\AuthenticationTest
+  ✓ login screen can be rendered                                         0.75s  
+  ✓ users can authenticate using the login screen                        0.48s  
+  ✓ users can not authenticate with invalid password                     0.40s  
+  ✓ users can logout                                                     0.15s  
+
+   PASS  Tests\Feature\Auth\EmailVerificationTest
+  ✓ email verification screen can be rendered                            0.18s  
+  ✓ email can be verified                                                0.20s  
+  ✓ email is not verified with invalid hash                              0.24s  
+
+   PASS  Tests\Feature\Auth\PasswordConfirmationTest
+  ✓ confirm password screen can be rendered                              0.18s  
+  ✓ password can be confirmed                                            0.15s  
+  ✓ password is not confirmed with invalid password                      0.35s  
+
+   PASS  Tests\Feature\Auth\PasswordResetTest
+  ✓ reset password link screen can be rendered                           0.16s  
+  ✓ reset password link can be requested                                 0.50s  
+  ✓ reset password screen can be rendered                                0.38s  
+  ✓ password can be reset with valid token                               0.43s  
+
+   PASS  Tests\Feature\Auth\RegistrationTest
+  ✓ registration screen can be rendered                                  0.16s  
+  ✓ new users can register                                               0.16s  
+
+   PASS  Tests\Feature\DashboardTest
+  ✓ guests are redirected to the login page                              0.15s  
+  ✓ authenticated users can visit the dashboard                          0.17s  
+
+   PASS  Tests\Feature\ExampleTest
+  ✓ returns a successful response                                        0.16s  
+
+   PASS  Tests\Feature\Settings\PasswordUpdateTest
+  ✓ password can be updated                                              0.15s  
+  ✓ correct password must be provided to update password                 0.16s  
+
+   PASS  Tests\Feature\Settings\ProfileUpdateTest
+  ✓ profile page is displayed                                            0.19s  
+  ✓ profile information can be updated                                   0.17s  
+  ✓ email verification status is unchanged when the email address is un… 0.14s  
+  ✓ user can delete their account                                        0.14s  
+  ✓ correct password must be provided to delete account                  0.15s  
+
+  Tests:    49 passed (304 assertions)
+  Duration: 17.34s
+

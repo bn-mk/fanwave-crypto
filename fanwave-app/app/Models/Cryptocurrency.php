@@ -61,7 +61,7 @@ class Cryptocurrency extends Model
     /**
      * Scope to get top cryptocurrencies by market cap rank
      */
-    public function scopeTopByMarketCap($query, $limit = 10)
+    public function scopeTopByMarketCap(\Illuminate\Database\Eloquent\Builder $query, int $limit = 10): \Illuminate\Database\Eloquent\Builder
     {
         return $query->whereNotNull('market_cap_rank')
                      ->orderBy('market_cap_rank')
@@ -71,7 +71,7 @@ class Cryptocurrency extends Model
     /**
      * Get formatted price with currency symbol
      */
-    public function getFormattedPriceAttribute()
+    public function getFormattedPriceAttribute(): string
     {
         return '$' . number_format($this->current_price, 2);
     }
@@ -79,7 +79,7 @@ class Cryptocurrency extends Model
     /**
      * Get formatted market cap
      */
-    public function getFormattedMarketCapAttribute()
+    public function getFormattedMarketCapAttribute(): string
     {
         $marketCap = $this->market_cap ?? 1e12; // Default to 1T for null values
         
